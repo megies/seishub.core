@@ -94,7 +94,7 @@ class PackageInstaller(object):
                     # references to it.
                     outfile = os.path.join(datadir, os.path.basename(filename))
                     with open(outfile, "w") as fh:
-                        fh.write(data_re)
+                        fh.write(data)
                 except Exception, e:
                     env.log.warn(e)
         if hasattr(o, '_registry_stylesheets'):
