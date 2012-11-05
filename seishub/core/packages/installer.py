@@ -2,6 +2,23 @@
 
 import os
 import sys
+import re
+
+
+PATTERN_SCHEMALOCATION = re.compile(r'( schemaLocation\s*=\s*)(["\'])(.*?)\2')
+
+
+def replaceLocation(data, match, datadir):
+    loc = match.group(3)
+    if loc.startswith("http://"):
+        # dont replace anything
+        return data
+    start, end = match.span()
+    # try to get the files basename and add data directory
+    loc = os.path.basename(loc)
+    loc = os.path.join(datadir, loc)
+    loc = match.group(1) + match.group(2) + loc + match.group(2)
+    return data[:start] + loc + data[end:]
 
 
 class PackageInstaller(object):
@@ -61,11 +78,23 @@ class PackageInstaller(object):
                     env.log.debug(msg)
                     continue
                 msg = "Registering Schema /%s/%s - %s ..."
+                datadir = os.path.join(env.getInstancePath(), 'data')
                 env.log.info(msg % (package_id, resourcetype_id, filename))
                 try:
                     data = file(filename, 'r').read()
+                    # replace file location of any referenced schema files
+                    # to point at local instance's data directory
+                    for match in PATTERN_SCHEMALOCATION.finditer(data):
+                        data = replaceLocation(data, match, datadir)
+                    # write to database
                     env.registry.schemas.register(package_id, resourcetype_id,
                                                   type, data, name)
+                    # write file also in data folder in case the file needs to
+                    # get looked up during parsing another schema that
+                    # references to it.
+                    outfile = os.path.join(datadir, os.path.basename(filename))
+                    with open(outfile, "w") as fh:
+                        fh.write(data_re)
                 except Exception, e:
                     env.log.warn(e)
         if hasattr(o, '_registry_stylesheets'):

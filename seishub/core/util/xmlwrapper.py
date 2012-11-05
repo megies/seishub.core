@@ -226,6 +226,8 @@ class XmlSchema(object):
     def __init__(self, schema_data, schema_type='XMLSchema'):
         f = StringIO(schema_data)
         schema_doc = etree.parse(f)
+        if schema_type.startswith('XMLSchema'):
+            schema_type = 'XMLSchema'
         if schema_type not in ['XMLSchema', 'RelaxNG', 'Schematron']:
             raise SeisHubError("Invalid schema type: %s" % schema_type)
         try:
