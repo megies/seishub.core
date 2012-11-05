@@ -178,6 +178,8 @@ class XmlCatalog(object):
         rid = resource.resourcetype.resourcetype_id
         schemas = self.env.registry.schemas.get(pid, rid)
         for schema in schemas:
+            if schema.type not in ['XMLSchema', 'RelaxNG', 'Schematron']:
+                continue
             try:
                 schema.validate(resource)
             except Exception, e:
